@@ -1,6 +1,6 @@
 {
   "appId": "com.tezconnect.app",
-  "appName": "TezConnect",
+  "appName": "Connections",
   "webDir": "dist",
   "server": {
     "url": "https://tezconnect.vercel.app",
