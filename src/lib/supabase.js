@@ -1,10 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Trim spaces/quotes/trailing slash and any accidental /rest/v1 path
+const clean = (v) => (v || '').trim().replace(/^["']|["']$/g, '');
+const env = import.meta.env;
+const url = clean(env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL)
+  .replace(/\/(rest|auth)\/v1.*$/, '')
+  .replace(/\/+$/, '');
+const anonKey = clean(
+  env.VITE_SUPABASE_ANON_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+);
 
-export const isConfigured =
-  Boolean(url && anonKey) && /^https:\/\/.+\.supabase\.co\/?$/.test(url) && !url.includes('YOUR-PROJECT');
+export const isConfigured = url.startsWith('https://') && anonKey.length > 20 && !url.includes('YOUR-PROJECT');
 
 if (!isConfigured) {
   console.warn(
