@@ -17,6 +17,22 @@
       .boot img { width: 96px; height: auto; animation: bootpulse 1.4s ease-in-out infinite; }
       @keyframes bootpulse { 0%, 100% { opacity: 0.55; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1); } }
     </style>
+    <script>
+      // If the app fails to even start, show why instead of a blank screen
+      (function () {
+        function show(msg) {
+          var r = document.getElementById('root');
+          if (r && r.querySelector('.boot')) {
+            r.innerHTML =
+              '<div class="boot" style="padding:24px;text-align:center"><div style="max-width:420px;font-family:sans-serif">' +
+              '<h2 style="color:#2e1065">App failed to start</h2>' +
+              '<p style="color:#b91c1c;word-break:break-word">' + String(msg).slice(0, 400) + '</p></div></div>';
+          }
+        }
+        window.addEventListener('error', function (e) { show(e.message || 'Script error'); });
+        window.addEventListener('unhandledrejection', function (e) { show((e.reason && e.reason.message) || e.reason); });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"><div class="boot"><img src="/logo-icon.png" alt="Connections" /></div></div>
