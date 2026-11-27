@@ -255,3 +255,8 @@ img { max-width: 100%; display: block; }
   .dash-main { padding: 36px 40px 40px; }
   .tiles { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ---------- Boot loader (matches index.html) ---------- */
+.boot { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; }
+.boot img { width: 96px; height: auto; animation: bootpulse 1.4s ease-in-out infinite; }
+@keyframes bootpulse { 0%, 100% { opacity: 0.55; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1); } }
