@@ -30,8 +30,15 @@ export const supabase = createClient(
 // Turn raw network errors into something a person can act on
 export function friendlyError(err) {
   const m = (err && err.message) || '';
-  if (!isConfigured)
-    return 'App is not connected to Supabase yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel, then redeploy.';
+  if (!isConfigured) {
+    const seen = Object.keys(env).filter((k) => /SUPABASE/i.test(k));
+    return (
+      'App is not connected to Supabase yet. ' +
+      `URL: ${url ? 'found' : 'MISSING'}, Key: ${anonKey.length > 20 ? 'found' : 'MISSING'}. ` +
+      `Variables the app can see: ${seen.length ? seen.join(', ') : 'none'}. ` +
+      'Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel, then redeploy.'
+    );
+  }
   if (/load failed|failed to fetch|networkerror/i.test(m))
     return 'Cannot reach the server. Check your internet, and make sure the Supabase URL in Vercel is correct.';
   if (/invalid login credentials/i.test(m)) return 'Wrong email or password.';
