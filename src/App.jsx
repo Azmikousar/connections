@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import Splash from './components/Splash.jsx';
 import LoginSignup from './components/LoginSignup.jsx';
-import Home from './components/Home.jsx';
+import Dashboard from './components/Dashboard.jsx';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -20,7 +20,7 @@ export default function App() {
   }, []);
 
   if (loading) return <div className="center-screen">Loading…</div>;
-  if (session) return <Home session={session} />;
+  if (session) return <Dashboard session={session} />;
 
   if (screen === 'splash') {
     return (
