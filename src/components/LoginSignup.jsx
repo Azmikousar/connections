@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, User } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { FaApple, FaFacebook, FaLinkedin } from 'react-icons/fa';
-import { supabase } from '../lib/supabase';
+import { supabase, friendlyError } from '../lib/supabase';
 import { Logo } from './Splash.jsx';
 
 const PROVIDERS = [
@@ -55,7 +55,7 @@ export default function LoginSignup({ initialMode = 'login', onBack }) {
         if (!data.session) setInfo('Check your email to confirm your account, then sign in.');
       }
     } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      setError(friendlyError(err));
     } finally {
       setBusy(false);
     }
