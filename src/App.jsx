@@ -19,7 +19,13 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (loading) return <div className="center-screen">Loading…</div>;
+  // Same look as the loader in index.html, so there is no visible jump
+  if (loading)
+    return (
+      <div className="boot">
+        <img src="/logo-icon.png" alt="Connections" />
+      </div>
+    );
   if (session) return <Dashboard session={session} />;
 
   if (screen === 'splash') {
