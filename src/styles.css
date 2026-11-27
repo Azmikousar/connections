@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light only;
   --purple-900: #17132a;
   --purple-800: #2e1065;
   --purple-700: #5b21b6;
@@ -46,16 +47,13 @@ img { max-width: 100%; display: block; }
 /* ---------- Brand ---------- */
 .brand { text-align: center; }
 .brand-logo { margin: 0 auto; height: auto; }
-.brand-lg .brand-logo { width: clamp(200px, 62vw, 300px); }
-.brand-sm .brand-logo { width: 150px; }
-.brand-tagline { margin: 10px 0 0; font-weight: 600; color: var(--purple-800); }
-.brand-lg .brand-tagline { font-size: 18px; }
-.brand-sm .brand-tagline { font-size: 14px; }
+.brand-lg .brand-logo { width: clamp(190px, 56vw, 270px); }
+.brand-sm .brand-logo { width: 170px; }
 
 /* ---------- Splash ---------- */
-.splash { justify-content: space-between; gap: 16px; }
-.splash-brand { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 18px; order: 1; }
-.globe-wrap { order: 2; position: relative; width: min(300px, 78vw); aspect-ratio: 1; margin: 4px 0; flex-shrink: 0; }
+.splash { justify-content: space-between; gap: 14px; }
+.splash-brand { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.globe-wrap { --globe: min(270px, 72vw); position: relative; width: var(--globe); aspect-ratio: 1; margin: 4px 0; flex-shrink: 0; }
 
 .globe {
   position: absolute; inset: 21%; border-radius: 50%;
@@ -73,7 +71,7 @@ img { max-width: 100%; display: block; }
 .orbit-dot {
   position: absolute; top: 50%; left: 50%;
   width: 44px; height: 44px; margin: -22px;
-  transform: rotate(var(--angle)) translateY(calc(min(300px, 78vw) * -0.42)) rotate(calc(-1 * var(--angle)));
+  transform: rotate(var(--angle)) translateY(calc(var(--globe) * -0.42)) rotate(calc(-1 * var(--angle)));
 }
 .orbit-icon {
   width: 100%; height: 100%; display: grid; place-items: center;
@@ -181,19 +179,23 @@ img { max-width: 100%; display: block; }
 @media (min-width: 960px) {
   .splash {
     max-width: 1120px;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 64px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 'brand globe' 'actions globe';
+    grid-template-rows: auto auto;
+    align-content: center;
+    align-items: start;
+    column-gap: 64px;
+    row-gap: 28px;
     padding: 48px 56px;
   }
-  .splash-brand { order: 1; flex: 1; max-width: 460px; align-items: flex-start; gap: 26px; }
+  .splash-brand { grid-area: brand; align-items: flex-start; gap: 22px; align-self: end; }
   .splash-brand .brand, .splash-copy { text-align: left; }
   .splash-brand .brand-logo { margin: 0; }
-  .brand-lg .brand-logo { width: 340px; }
+  .brand-lg .brand-logo { width: 320px; }
   .splash-rule { margin-left: 0; }
-  .splash-actions { grid-template-columns: 1fr 1fr; max-width: 460px; }
-  .globe-wrap { order: 2; width: min(520px, 42vw); margin: 0; }
-  .orbit-dot { width: 54px; height: 54px; margin: -27px; transform: rotate(var(--angle)) translateY(calc(min(520px, 42vw) * -0.42)) rotate(calc(-1 * var(--angle))); }
+  .splash-actions { grid-area: actions; grid-template-columns: 1fr 1fr; max-width: 460px; }
+  .globe-wrap { --globe: min(520px, 42vw); grid-area: globe; margin: 0; align-self: center; justify-self: center; }
+  .orbit-dot { width: 54px; height: 54px; margin: -27px; }
   .orbit-icon svg { width: 24px; height: 24px; }
 }
