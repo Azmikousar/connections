@@ -1,147 +1,192 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  Users, Store, Briefcase, BarChart3, MessageSquare, CalendarDays,
-  Search, LogOut, Bell, LayoutDashboard, UserRound, Sparkles,
+  Menu, Bell, Search, X, ChevronDown, Plus, Home as HomeIcon, Compass, MessageCircle,
+  UserRound, LogOut, Check, User, Building2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { NAV, GROUPS, LIVE, CREATE_ACTIONS, byId } from '../data/nav';
+import HomeView from './views/HomeView.jsx';
+import ExploreView from './views/ExploreView.jsx';
+import ProfileView from './views/ProfileView.jsx';
+import Placeholder from './views/Placeholder.jsx';
+import '../dashboard.css';
 
-const FEATURES = [
-  { id: 'social', label: 'Social Network', icon: Users, text: 'Find and follow people, share updates.' },
-  { id: 'market', label: 'Marketplace', icon: Store, text: 'Discover local businesses and services.' },
-  { id: 'jobs', label: 'Jobs & Careers', icon: Briefcase, text: 'Browse and post opportunities.' },
-  { id: 'biz', label: 'Business Dashboard', icon: BarChart3, text: 'Manage your listings and insights.' },
-  { id: 'msg', label: 'Messages', icon: MessageSquare, text: 'Chat with your connections.' },
-  { id: 'events', label: 'Events & Webinars', icon: CalendarDays, text: 'Join and host events.' },
-];
-
-const NAV = [
-  { id: 'home', label: 'Home', icon: LayoutDashboard },
-  { id: 'social', label: 'Network', icon: Users },
-  { id: 'msg', label: 'Messages', icon: MessageSquare },
+const TABS = [
+  { id: 'home', label: 'Home', icon: HomeIcon },
+  { id: 'explore', label: 'Explore', icon: Compass },
+  { id: 'create', label: 'Create', icon: Plus },
+  { id: 'messages', label: 'Messages', icon: MessageCircle },
   { id: 'profile', label: 'Profile', icon: UserRound },
 ];
 
 export default function Dashboard({ session }) {
-  const [profile, setProfile] = useState(null);
-  const [tab, setTab] = useState('home');
-  const [query, setQuery] = useState('');
-
   const user = session.user;
+  const [profile, setProfile] = useState(null);
+  const [view, setView] = useState('home');
+  const [workspace, setWorkspace] = useState('personal');
+  const [wsOpen, setWsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [toast, setToast] = useState('');
 
-  useEffect(() => {
+  const loadProfile = useCallback(() => {
     supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .maybeSingle()
-      .then(({ data }) => setProfile(data));
+      .then(({ data }) => setProfile(data))
+      .catch(() => {});
   }, [user.id]);
 
-  const name = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'there';
-  const initial = name.trim().charAt(0).toUpperCase();
-  const active = FEATURES.find((f) => f.id === tab);
+  useEffect(loadProfile, [loadProfile]);
 
-  const signOut = () => supabase.auth.signOut();
+  useEffect(() => {
+    if (!toast) return undefined;
+    const t = setTimeout(() => setToast(''), 2600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const name = profile?.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'there';
+  const completion = 40 + (name && name !== user.email?.split('@')[0] ? 30 : 0) + (profile?.bio ? 30 : 0);
+
+  const go = (id) => {
+    setView(id === 'settings' ? 'profile' : id);
+    setMenuOpen(false);
+    setCreateOpen(false);
+    window.scrollTo({ top: 0 });
+  };
+
+  const onAction = (a) => {
+    setCreateOpen(false);
+    if (a.to) return go(a.to);
+    setToast(`${a.label} is coming in Phase ${a.phase}`);
+  };
+
+  const onSoon = (label) => setToast(`${label} is coming soon`);
+
+  const activeId = view === 'profile' ? 'settings' : view;
+
+  let screen;
+  if (view === 'home') screen = <HomeView name={name} completion={completion} workspace={workspace} go={go} onAction={onAction} />;
+  else if (view === 'explore') screen = <ExploreView onAction={onAction} />;
+  else if (view === 'profile')
+    screen = <ProfileView user={user} profile={profile} name={name} completion={completion} onSaved={loadProfile} onSoon={onSoon} />;
+  else screen = <Placeholder section={byId[view]} go={go} />;
+
+  const sideNav = (
+    <nav className="d-nav" aria-label="Main">
+      {GROUPS.map((g) => (
+        <div key={g} className="d-group">
+          <p>{g}</p>
+          {NAV.filter((n) => n.group === g).map(({ id, label, icon: Icon }) => (
+            <button key={id} className={`d-item ${activeId === id ? 'on' : ''}`} onClick={() => go(id)}>
+              <Icon size={19} />
+              <span>{label}</span>
+              {!LIVE.has(id) && <em>Soon</em>}
+            </button>
+          ))}
+        </div>
+      ))}
+    </nav>
+  );
 
   return (
-    <div className="dash">
-      {/* Sidebar (desktop) */}
-      <aside className="dash-side">
-        <img className="dash-logo" src="/logo-icon.png" alt="Connections" />
-        <nav>
-          {[...NAV.slice(0, 1), ...FEATURES.map((f) => ({ id: f.id, label: f.label, icon: f.icon })), NAV[3]].map(
-            ({ id, label, icon: Icon }) => (
-              <button key={id} className={`side-item ${tab === id ? 'on' : ''}`} onClick={() => setTab(id)}>
-                <Icon size={20} /> {label}
-              </button>
-            )
-          )}
-        </nav>
-        <button className="side-item out" onClick={signOut}>
-          <LogOut size={20} /> Sign Out
+    <div className="d-app">
+      {/* Desktop sidebar */}
+      <aside className="d-side">
+        <img className="d-logo" src="/logo-full.png" alt="Connections" />
+        {sideNav}
+        <button className="d-item out" onClick={() => supabase.auth.signOut()}>
+          <LogOut size={19} /> <span>Sign out</span>
         </button>
       </aside>
 
-      <main className="dash-main">
-        <header className="dash-top">
-          <div>
-            <p className="dash-hello">Welcome back,</p>
-            <h2 className="dash-name">{name} 👋</h2>
+      {/* Mobile drawer */}
+      {menuOpen && (
+        <div className="d-overlay" onClick={() => setMenuOpen(false)}>
+          <aside className="d-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="d-drawer-head">
+              <img src="/logo-icon.png" alt="Connections" />
+              <button className="d-icon" onClick={() => setMenuOpen(false)} aria-label="Close menu"><X size={20} /></button>
+            </div>
+            {sideNav}
+          </aside>
+        </div>
+      )}
+
+      <div className="d-body">
+        <header className="d-top">
+          <button className="d-icon d-menu-btn" onClick={() => setMenuOpen(true)} aria-label="Open menu"><Menu size={20} /></button>
+
+          <div className="d-ws">
+            <button className="d-ws-btn" onClick={() => setWsOpen(!wsOpen)}>
+              {workspace === 'personal' ? <User size={16} /> : <Building2 size={16} />}
+              {workspace === 'personal' ? 'Personal' : 'My Business'}
+              <ChevronDown size={16} />
+            </button>
+            {wsOpen && (
+              <div className="d-ws-menu">
+                {[['personal', 'Personal', User], ['business', 'My Business', Building2]].map(([id, label, Icon]) => (
+                  <button key={id} onClick={() => { setWorkspace(id); setWsOpen(false); }}>
+                    <Icon size={16} /> {label} {workspace === id && <Check size={16} />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="dash-top-right">
-            <button className="icon-btn" aria-label="Notifications"><Bell size={20} /></button>
-            <div className="avatar" title={user.email}>{initial}</div>
+
+          <label className="d-top-search">
+            <Search size={17} />
+            <input placeholder="Search people, businesses, services…" onFocus={() => go('explore')} />
+          </label>
+
+          <div className="d-top-right">
+            <button className="d-icon" onClick={() => go('notifications')} aria-label="Notifications"><Bell size={20} /></button>
+            <button className="avatar" onClick={() => go('profile')} aria-label="Profile">{name.trim().charAt(0).toUpperCase()}</button>
           </div>
         </header>
 
-        {tab === 'home' && (
-          <>
-            <label className="search">
-              <Search size={18} />
-              <input
-                placeholder="Search people, businesses, services…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-            </label>
+        <main className="d-main">{screen}</main>
+      </div>
 
-            <section className="stats">
-              <div className="stat"><b>0</b><span>Connections</span></div>
-              <div className="stat"><b>0</b><span>Messages</span></div>
-              <div className="stat"><b>0</b><span>Opportunities</span></div>
-            </section>
-
-            <h3 className="dash-h">Explore</h3>
-            <section className="tiles">
-              {FEATURES.filter((f) => !query || f.label.toLowerCase().includes(query.toLowerCase())).map(
-                ({ id, label, icon: Icon }) => (
-                  <button key={id} className="tile" onClick={() => setTab(id)}>
-                    <Icon size={30} />
-                    <span>{label}</span>
-                  </button>
-                )
-              )}
-            </section>
-
-            <section className="promo">
-              <Sparkles size={22} />
-              <div>
-                <b>Complete your profile</b>
-                <p>Add a photo and short bio so people and businesses can find you.</p>
-              </div>
-              <button className="btn btn-primary small" onClick={() => setTab('profile')}>Start</button>
-            </section>
-          </>
+      {/* Mobile bottom tabs */}
+      <nav className="d-tabs" aria-label="Primary">
+        {TABS.map(({ id, label, icon: Icon }) =>
+          id === 'create' ? (
+            <button key={id} className="d-create" onClick={() => setCreateOpen(true)} aria-label="Create">
+              <Icon size={26} />
+            </button>
+          ) : (
+            <button key={id} className={`d-tab ${view === id ? 'on' : ''}`} onClick={() => go(id)}>
+              <Icon size={22} />
+              <span>{label}</span>
+            </button>
+          )
         )}
-
-        {active && (
-          <section className="panel">
-            <active.icon size={40} />
-            <h3>{active.label}</h3>
-            <p>{active.text}</p>
-            <span className="soon">Coming soon</span>
-          </section>
-        )}
-
-        {tab === 'profile' && (
-          <section className="panel">
-            <div className="avatar big">{initial}</div>
-            <h3>{name}</h3>
-            <p>{user.email}</p>
-            <button className="btn btn-outline small" onClick={signOut}>Sign Out</button>
-          </section>
-        )}
-      </main>
-
-      {/* Bottom tab bar (mobile) */}
-      <nav className="dash-tabs">
-        {NAV.map(({ id, label, icon: Icon }) => (
-          <button key={id} className={`tab-item ${tab === id ? 'on' : ''}`} onClick={() => setTab(id)}>
-            <Icon size={22} />
-            <span>{label}</span>
-          </button>
-        ))}
       </nav>
+
+      {/* Create sheet */}
+      {createOpen && (
+        <div className="d-overlay center" onClick={() => setCreateOpen(false)}>
+          <div className="d-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="d-sheet-head">
+              <h3>Create</h3>
+              <button className="d-icon" onClick={() => setCreateOpen(false)} aria-label="Close"><X size={20} /></button>
+            </div>
+            <div className="d-sheet-grid">
+              {CREATE_ACTIONS.map((a) => (
+                <button key={a.id} onClick={() => onAction(a)}>
+                  <span><a.icon size={22} /></span>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="d-toast" role="status">{toast}</div>}
     </div>
   );
 }
